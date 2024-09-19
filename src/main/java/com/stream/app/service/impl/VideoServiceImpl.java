@@ -29,41 +29,73 @@ public class VideoServiceImpl implements VideoService {
 	
 	@Value("${files.video}")
 	private String DIR;
-	
+
 	@PostConstruct
 	public void init() {
-		File file=new File(DIR);
-		if(!file.exists()) {
+
+		File file = new File(DIR);
+
+		if (!file.exists()) {
 			file.mkdir();
-			System.out.println("Folder Created");
-		}else
-			System.out.println("Folder Already Created");
+			System.out.println("Folder Created:");
+		} else {
+			System.out.println("Folder already created");
+		}
+
 	}
 
 	@Override
 	public Video save(Video video, MultipartFile file) {
-	try {
-		String fileName=file.getOriginalFilename();
-		String contentType=file.getContentType();
-		InputStream inputStream=file.getInputStream();
-		
-		String cleanFileName = StringUtils.cleanPath(fileName);
-		String cleanFolder=StringUtils.cleanPath(DIR);
-		
-		Path path = Paths.get(cleanFolder,cleanFileName);
-		System.out.println(path);
-		
-		Files.copy(inputStream, path,StandardCopyOption.REPLACE_EXISTING);
-		
-		video.setContentType(contentType);
-		video.setFilePath(path.toString());
-		
-		return repository.save(video);
-	}catch(IOException e) {
-		e.printStackTrace();
-		return null;
+		// original file name
+
+		try {
+
+
+			String filename = file.getOriginalFilename();
+			String contentType = file.getContentType();
+			InputStream inputStream = file.getInputStream();
+
+
+			// file path
+			String cleanFileName = StringUtils.cleanPath(filename);
+
+
+			//folder path : create
+
+			String cleanFolder = StringUtils.cleanPath(DIR);
+
+
+			// folder path with  filename
+			Path path = Paths.get(cleanFolder, cleanFileName);
+
+			System.out.println(contentType);
+			System.out.println(path);
+
+			// copy file to the folder
+			Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
+
+
+			// video meta data
+
+			video.setContentType(contentType);
+			video.setFilePath(path.toString());
+			Video savedVideo = repository.save(video);
+			//processing video
+		//	processVideo(savedVideo.getVideoId());
+
+			//delete actual video file and database entry  if exception
+
+			// metadata save
+			return savedVideo;
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Error in processing video ");
+		}
+
+
 	}
-	}
+
 
 	@Override
 	public Video get(String videoId) {
