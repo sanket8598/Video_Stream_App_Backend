@@ -15,4 +15,7 @@ public interface VideoService {
 	Video getTitle(String title);
 	
 	List<Video> getAll();
+	
+	//video processing
+	String processVideo(String videoId); 
 }
